@@ -67,6 +67,7 @@ int main(void)
       mb.registers.one[mbREG_adc_Vjet] = (uint16_t)adc_end[3];
       mb.registers.one[mbREG_adc_Ijet] = (uint16_t)adc_end[2];
       mb.registers.one[mbREG_adc_5V] = (uint16_t)adc_end[4];
+      //led_toggle();
     }   
     if (adc_flag & 2)
     {

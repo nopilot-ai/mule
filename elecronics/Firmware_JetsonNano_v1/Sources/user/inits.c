@@ -193,9 +193,9 @@ void init_adc(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
   
-  //freq to give array 5 hz
-  uint16_t PrescalerValue = (uint16_t) (SystemCoreClock / 2 / 5000) - 1;
-  TIM_TimeBaseStructure.TIM_Period = 4;
+  //freq to give array 10 hz
+  uint16_t PrescalerValue = (uint16_t) (SystemCoreClock / 2000) - 1;
+  TIM_TimeBaseStructure.TIM_Period = 200;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -207,16 +207,19 @@ void init_adc(void)
   TIM_OCInitStructure.TIM_Pulse = 0x1; 
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;         
   TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-  //TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
+  TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
   TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
   TIM_ARRPreloadConfig(TIM1, ENABLE);
   TIM_CtrlPWMOutputs(TIM1, ENABLE);  
+
 /*
+  TIM_Cmd(TIM1, ENABLE);  
   NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);  */
+  NVIC_Init(&NVIC_InitStructure); 
+  TIM_Cmd(TIM1, ENABLE);   */
     
 __IO uint16_t ADCConvertedValue;
   // DMA1 channel1 configuration ----------------------------------------------
@@ -256,7 +259,7 @@ __IO uint16_t ADCConvertedValue;
   ADC_RegularChannelConfig(ADC1, ADC_Channel_2, 3, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_3, 4, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 5, ADC_SampleTime_239Cycles5);
-  ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);  
+  //ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);  
   ADC_Cmd(ADC1 , ENABLE );
   ADC_DMACmd(ADC1 , ENABLE );   
   TIM_Cmd(TIM1, ENABLE);  
@@ -271,13 +274,13 @@ __IO uint16_t ADCConvertedValue;
   while(ADC_GetCalibrationStatus(ADC1));
   
   ADC_ExternalTrigConvCmd(ADC1, ENABLE);
- // ADC_SoftwareStartConvCmd ( ADC1 , ENABLE ) ; */ 
+ // ADC_SoftwareStartConvCmd ( ADC1 , ENABLE ) ; *
   
   NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);  
+  NVIC_Init(&NVIC_InitStructure);  */
 }
 
 void init_ppm(void)
