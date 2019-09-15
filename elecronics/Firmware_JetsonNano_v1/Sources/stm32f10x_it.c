@@ -80,14 +80,14 @@ void DMA1_Channel1_IRQHandler(void)
     adc_flag &=~ 1;
     adc_flag |= 2;
     DMA_ClearFlag(DMA1_IT_TC1);  
-    //led_toggle();
+    led_toggle();
   }
   if (DMA_GetITStatus(DMA1_IT_HT1) == SET)
   {
     adc_flag |= 1;
     adc_flag |= 2;
     DMA_ClearFlag(DMA1_IT_HT1);  
-    //led_toggle();
+    led_toggle();
   }
 }
 

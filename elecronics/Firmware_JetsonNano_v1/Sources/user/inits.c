@@ -207,13 +207,12 @@ void init_adc(void)
   TIM_OCInitStructure.TIM_Pulse = 0x1; 
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;         
   TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-  TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
-  TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
-  TIM_ARRPreloadConfig(TIM1, ENABLE);
-  TIM_CtrlPWMOutputs(TIM1, ENABLE);  
+  //TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
+  //TIM_ARRPreloadConfig(TIM1, ENABLE);
+  //TIM_CtrlPWMOutputs(TIM1, ENABLE);  
 
 /*
-  TIM_Cmd(TIM1, ENABLE);  
+  TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
   NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
@@ -247,24 +246,43 @@ __IO uint16_t ADCConvertedValue;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);  
   
-  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;//ENABLE;
-  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1; //ADC_ExternalTrigConv_T1_CC1 //ADC_ExternalTrigConv_None
   ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
+  ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
+  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
   ADC_InitStructure.ADC_NbrOfChannel = 5;
-  ADC_InitStructure.ADC_ScanConvMode = ENABLE;
   ADC_Init(ADC1, &ADC_InitStructure);
+  
+  
   ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 2, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_2, 3, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_3, 4, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 5, ADC_SampleTime_239Cycles5);
+  /* Regular discontinuous mode channel number configuration */
+  ADC_DiscModeChannelCountConfig(ADC1, 1);
+  /* Enable regular discontinuous mode */
+  ADC_DiscModeCmd(ADC1, ENABLE);
   //ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);  
-  ADC_Cmd(ADC1 , ENABLE );
   ADC_DMACmd(ADC1 , ENABLE );   
-  TIM_Cmd(TIM1, ENABLE);  
-  
   ADC_ExternalTrigConvCmd(ADC1, ENABLE);
+  
+  ADC_Cmd(ADC1 , ENABLE );
+  
+  /* Enable ADC1 reset calibration register */   
+  ADC_ResetCalibration(ADC1);
+  /* Check the end of ADC1 reset calibration register */
+  while(ADC_GetResetCalibrationStatus(ADC1));
+
+  /* Start ADC1 calibration */
+  ADC_StartCalibration(ADC1);
+  /* Check the end of ADC1 calibration */
+  while(ADC_GetCalibrationStatus(ADC1));
+  
+  TIM_Cmd(TIM1, ENABLE);    
+  
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);  
   //ADC_SoftwareStartConvCmd ( ADC1 , ENABLE ) ;
   /*ADC_ResetCalibration(ADC1);
 
