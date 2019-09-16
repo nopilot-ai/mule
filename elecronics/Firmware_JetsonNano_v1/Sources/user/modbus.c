@@ -27,7 +27,7 @@ void mb_sendTxBuffer(void)
   mb.u16OutCnt++;
   mb.u8BufferOut[ mb.u16OutCnt ] = highByte(u16crc);
   mb.u16OutCnt++;
-  
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
   DMA_SetCurrDataCounter(DMA1_Channel4, mb.u16OutCnt);
   DMA_Cmd(DMA1_Channel4, ENABLE);
   /*

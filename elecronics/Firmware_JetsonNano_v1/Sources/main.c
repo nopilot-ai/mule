@@ -32,14 +32,21 @@ uint16_t adc_data[ADC_ARR_LENGT*2][ADC_CH_CNT];
 
 int main(void)
 {
-  //RCC->CFGR |= RCC_MCO_PLLCLK_Div2;
-  init_sysclk();
-  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+  PWR->CR |= PWR_CR_PLS_0 | PWR_CR_PLS_1 | PWR_CR_PLS_2;
+  PWR->CR |= PWR_CR_PVDE;
+  while(PWR->CSR & PWR_CSR_PVDO);
+  //RCC->CFGR |= RCC_MCO_PLLCLK_Div2; 
+  SystemInit();
+  //init_sysclk();
+  //IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+  __disable_irq ();
+  init_modbus(115200);
   init_gpio();
   init_adc(); 
-  init_modbus(115200);
   init_ppm();
   mb.u8id = 1;
+  __enable_irq (); 
+  
   
   /*GPIO_InitTypeDef GPIO_InitStructure;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
@@ -62,12 +69,11 @@ int main(void)
       TIM_SetCompare3(TIM4, mb.registers.one[mbREG_PPM_2]);
       TIM_SetCompare4(TIM4, mb.registers.one[mbREG_PPM_1]);
       
-      mb.registers.one[mbREG_adc_Vbat] = (uint16_t)adc_end[0];
+      mb.registers.one[mbREG_adc_Vbat] = (uint16_t)adc_end[0] * (3300.0 / 4096.0) * 11;
       mb.registers.one[mbREG_adc_Ibat] = (uint16_t)adc_end[1];
-      mb.registers.one[mbREG_adc_Vjet] = (uint16_t)adc_end[3];
+      mb.registers.one[mbREG_adc_Vjet] = (uint16_t)adc_end[3] * (3300.0 / 4096.0) * 11;
       mb.registers.one[mbREG_adc_Ijet] = (uint16_t)adc_end[2];
-      mb.registers.one[mbREG_adc_5V] = (uint16_t)adc_end[4];
-      //led_toggle();
+      mb.registers.one[mbREG_adc_5V] = (uint16_t)adc_end[4] * (3300.0 / 4096.0) * 2;
     }   
     if (adc_flag & 2)
     {

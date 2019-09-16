@@ -49,6 +49,26 @@ void USART1_IRQHandler(void)
   }  
   USART_ClearFlag(USART1, USART_IT_ORE);
   USART_ClearFlag(USART1, USART_IT_TXE);
+  //led_toggle();
+}
+
+uint32_t temp_tim2 = 0;
+void TIM2_IRQHandler(void)
+{
+  TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE);
+  USART_ITConfig(USART1, USART_IT_RXNE, DISABLE); 
+  mb.flag |= 1;  
+  //led_toggle();
+}
+
+void DMA1_Channel4_IRQHandler(void)
+{
+  DMA_ClearFlag(DMA1_IT_TC4);  
+  DMA_Cmd(DMA1_Channel4, DISABLE);
+  USART_ClearFlag(USART1, USART_IT_RXNE);
+  USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+  mb.u16InCnt = 0;
+  //led_toggle();
 }
 
 
@@ -64,14 +84,6 @@ void ADC1_2_IRQHandler(void)
    led_toggle();
 }
 
-
-uint32_t temp_tim2 = 0;
-void TIM2_IRQHandler(void)
-{
-  TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE);
-  USART_ITConfig(USART1, USART_IT_RXNE, DISABLE); 
-  mb.flag |= 1;  
-}
 
 void DMA1_Channel1_IRQHandler(void)
 {
@@ -91,14 +103,6 @@ void DMA1_Channel1_IRQHandler(void)
   }
 }
 
-void DMA1_Channel4_IRQHandler(void)
-{
-  DMA_ClearFlag(DMA1_IT_TC4);  
-  DMA_Cmd(DMA1_Channel4, DISABLE);
-  USART_ClearFlag(USART1, USART_IT_RXNE);
-  USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-  mb.u16InCnt = 0;
-}
 
 void NMI_Handler(void)
 {

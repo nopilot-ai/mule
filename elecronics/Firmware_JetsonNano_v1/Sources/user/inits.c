@@ -3,92 +3,28 @@
 #include "mb_regs.h"
 #include "main.h"
 
+
 GPIO_InitTypeDef GPIO_InitStructure;
-RCC_ClocksTypeDef RCC_ClockFreq;
-ErrorStatus HSEStartUpStatus;
-
-void init_sysclk(void)
-{
-  RCC_DeInit();
-
-  /* Enable HSE */
-  RCC_HSEConfig(RCC_HSE_ON);
-
-  /* Wait till HSE is ready */
-  HSEStartUpStatus = RCC_WaitForHSEStartUp();
-
-  if (HSEStartUpStatus == SUCCESS)
-  {
-    /* Enable Prefetch Buffer */
-    FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
-
-    /* Flash 2 wait state */
-    FLASH_SetLatency(FLASH_Latency_2);
- 
-    /* HCLK = SYSCLK */
-    RCC_HCLKConfig(RCC_SYSCLK_Div1); 
-  
-    /* PCLK2 = HCLK */
-    RCC_PCLK2Config(RCC_HCLK_Div1); 
-
-    /* PCLK1 = HCLK/2 */
-    RCC_PCLK1Config(RCC_HCLK_Div2);
-    RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_9);
-    
-    /* Enable PLL */ 
-    RCC_PLLCmd(ENABLE);
-
-    /* Wait till PLL is ready */
-    while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
-    {
-    }
-
-    /* Select PLL as system clock source */
-    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-
-    /* Wait till PLL is used as system clock source */
-    while(RCC_GetSYSCLKSource() != 0x08)
-    {
-    }
-  }
-  else
-  {
-    while (1)
-    {
-    }
-  }
-}
-
 
 void init_gpio(void)
 {
+  //GPIO_InitTypeDef GPIO_InitStructure;
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC, ENABLE);
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
-  GPIOC->BSRR |= GPIO_BSRR_BS13;  
-  
-  //uarts pin config
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIOC->BSRR |= GPIO_BSRR_BS13;    
     
   //JET_PON
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);
-  
+  GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);  
 }
 
-USART_InitTypeDef USART_InitStructure;
+
 
 #define USARTy_Tx_DMA_Channel    DMA1_Channel4
 #define USARTy_Tx_DMA_FLAG       DMA1_FLAG_TC4
@@ -96,14 +32,27 @@ USART_InitTypeDef USART_InitStructure;
 
 void init_modbus(uint32_t speed)
 {
+  GPIO_InitTypeDef GPIO_InitStructure;
   DMA_InitTypeDef DMA_InitStructure;
-  
+  USART_InitTypeDef USART_InitStructure;
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_AFIO, ENABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
   
+  //uarts pin config
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
   //DMA init
-  DMA_DeInit(USARTy_Tx_DMA_Channel);
+  //DMA_DeInit(USARTy_Tx_DMA_Channel);
   DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&(USART1->DR);
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)mb.u8BufferOut;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
@@ -169,10 +118,10 @@ void init_modbus(uint32_t speed)
   
   
   
-  USART_Cmd(USART1, ENABLE);  
+  
   DMA_SetCurrDataCounter(DMA1_Channel4, 14);
   DMA_Cmd(DMA1_Channel4, ENABLE);
-      
+  USART_Cmd(USART1, ENABLE);      
   mb.u8regsize = REGISTERS_SIZE;
 }
 
@@ -185,17 +134,18 @@ void init_adc(void)
   NVIC_InitTypeDef NVIC_InitStructure;  
   TIM_OCInitTypeDef         TIM_OCInitStructure;
   
-  RCC_ADCCLKConfig(RCC_CFGR_ADCPRE_DIV6);
+  RCC_ADCCLKConfig(RCC_CFGR_ADCPRE_DIV8);
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 | RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 | RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA, ENABLE); 
   
+  //GPIO_StructInit(&GPIO_InitStructure);
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
   
-  //freq to give array 10 hz
-  uint16_t PrescalerValue = (uint16_t) (SystemCoreClock / 2000) - 1;
-  TIM_TimeBaseStructure.TIM_Period = 200;
+  //freq to give array 250 hz
+  uint16_t PrescalerValue = (uint16_t) (SystemCoreClock / 2500) - 1;
+  TIM_TimeBaseStructure.TIM_Period = 9;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -211,8 +161,10 @@ void init_adc(void)
   //TIM_ARRPreloadConfig(TIM1, ENABLE);
   //TIM_CtrlPWMOutputs(TIM1, ENABLE);  
 
-/*
-  TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
+  TIM_Cmd(TIM1, ENABLE);      
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);  
+
+  /*TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
   NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
@@ -254,6 +206,13 @@ __IO uint16_t ADCConvertedValue;
   ADC_InitStructure.ADC_NbrOfChannel = 5;
   ADC_Init(ADC1, &ADC_InitStructure);
   
+ /* ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE); 
+  NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);  */
+  
   
   ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 2, ADC_SampleTime_239Cycles5);
@@ -269,36 +228,12 @@ __IO uint16_t ADCConvertedValue;
   ADC_ExternalTrigConvCmd(ADC1, ENABLE);
   
   ADC_Cmd(ADC1 , ENABLE );
-  
-  /* Enable ADC1 reset calibration register */   
+  /*
   ADC_ResetCalibration(ADC1);
-  /* Check the end of ADC1 reset calibration register */
-  while(ADC_GetResetCalibrationStatus(ADC1));
-
-  /* Start ADC1 calibration */
-  ADC_StartCalibration(ADC1);
-  /* Check the end of ADC1 calibration */
-  while(ADC_GetCalibrationStatus(ADC1));
-  
-  TIM_Cmd(TIM1, ENABLE);    
-  
-  TIM_CtrlPWMOutputs(TIM1, ENABLE);  
-  //ADC_SoftwareStartConvCmd ( ADC1 , ENABLE ) ;
-  /*ADC_ResetCalibration(ADC1);
-
   while(ADC_GetResetCalibrationStatus(ADC1));
   ADC_StartCalibration(ADC1);
-
-  while(ADC_GetCalibrationStatus(ADC1));
+  while(ADC_GetCalibrationStatus(ADC1));*/
   
-  ADC_ExternalTrigConvCmd(ADC1, ENABLE);
- // ADC_SoftwareStartConvCmd ( ADC1 , ENABLE ) ; *
-  
-  NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);  */
 }
 
 void init_ppm(void)
