@@ -32,6 +32,7 @@ uint16_t adc_data[ADC_ARR_LENGT*2][ADC_CH_CNT];
 
 struct adc_math board_va;
 
+uint16_t led_ws2812[ARRAY_LEN] = {0};
 
 int main(void)
 {
@@ -48,6 +49,7 @@ int main(void)
   init_adc(); 
   init_ppm();
   mb.u8id = 1;
+  init_ws2812();
   __enable_irq (); 
   
   

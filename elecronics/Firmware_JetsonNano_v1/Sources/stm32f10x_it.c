@@ -103,6 +103,10 @@ void DMA1_Channel1_IRQHandler(void)
   }
 }
 
+void DMA1_Channel2_IRQHandler(void)
+{
+  DMA_ClearFlag(DMA1_IT_TC1);     
+}
 
 void NMI_Handler(void)
 {

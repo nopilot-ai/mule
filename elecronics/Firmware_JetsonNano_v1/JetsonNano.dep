@@ -2,7 +2,7 @@
 
 <project>
   <fileVersion>2</fileVersion>
-  <fileChecksum>3863581554</fileChecksum>
+  <fileChecksum>1309682370</fileChecksum>
   <configuration>
     <name>Debug</name>
     <outputs>
@@ -151,6 +151,8 @@
       <file>$PROJ_DIR$\Debug\Obj\stm32f10x_adc.o</file>
       <file>$TOOLKIT_DIR$\inc\c\intrinsics.h</file>
       <file>$TOOLKIT_DIR$\CMSIS\Lib\IAR\iar_cortexM3l_math.a</file>
+      <file>$PROJ_DIR$\Sources\user\ws2812.h</file>
+      <file>$PROJ_DIR$\Sources\user\colors.h</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
@@ -605,6 +607,10 @@
           <name>BICOMP</name>
           <file> 81</file>
         </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 113</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
@@ -664,11 +670,11 @@
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 40 121 102 118 83 84 116 136 115 76 55 78 143 97 41 86 32 17 56 33 127 89 18 1 2 3 4 5 34 19 6 0 67 70 69 62 50 65 25 44 46 7</file>
+          <file> 40 121 102 118 83 84 116 136 115 76 55 78 143 97 41 86 32 17 56 33 127 89 18 1 2 3 4 5 34 19 6 0 67 70 69 62 50 65 25 44 46 7 145</file>
         </tool>
         <tool>
           <name>ICCARM</name>
-          <file> 40 121 102 118 83 84 116 136 115 76 55 78 143 97 41 86 32 17 56 33 127 89 18 1 2 3 4 5 34 19 6 0 67 70 69 62 50 65 25 44 46 7</file>
+          <file> 40 121 102 118 83 84 116 136 115 76 55 78 143 97 41 86 32 17 56 33 127 89 18 1 2 3 4 5 34 19 6 0 67 70 69 62 50 65 25 44 46 7 145</file>
         </tool>
       </inputs>
     </file>

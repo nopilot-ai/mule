@@ -2,6 +2,7 @@
 #include "modbus.h"
 #include "mb_regs.h"
 #include "main.h"
+#include "ws2812.h"
 
 
 GPIO_InitTypeDef GPIO_InitStructure;
@@ -203,8 +204,9 @@ void init_ppm(void)
   #define TIM_PPM TIM4
   GPIO_InitTypeDef GPIO_InitStructure;
   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-  TIM_OCInitTypeDef  TIM_OCInitStructure;
-  
+  TIM_OCInitTypeDef  TIM_OCInitStructure;  
+    
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
   
@@ -246,6 +248,108 @@ void init_ppm(void)
   
   TIM_Cmd(TIM_PPM, ENABLE);
 }
+
+void init_ws2812(void)
+{  
+  DMA_InitTypeDef DMA_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure;
+  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+  TIM_OCInitTypeDef  TIM_OCInitStructure;
+  
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    
+  //GPIO_PinRemapConfig(GPIO_PartialRemap_TIM3, ENABLE);	
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);  
+  
+  TIM_TimeBaseStructure.TIM_Period = 89;
+  TIM_TimeBaseStructure.TIM_Prescaler = 0;
+  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+  
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+  TIM_OCInitStructure.TIM_Pulse = 0;  
+  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+  TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+  
+  TIM_CtrlPWMOutputs(TIM3, ENABLE);
+  
+  TIM_ARRPreloadConfig(TIM3, ENABLE);
+  //TIM_DMAConfig(TIM3,TIM_DMABase_CCR3, 1);
+  TIM_DMACmd(TIM3, TIM_DMA_Update, ENABLE);
+  //TIM3->DMAR = 0x81;
+  TIM_Cmd(TIM3, ENABLE);
+  /*
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&(TIM3->CCR3);
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)led_ws2812;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+  DMA_InitStructure.DMA_BufferSize = ARRAY_LEN;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+  DMA_Init(DMA1_Channel2, &DMA_InitStructure);
+  DMA_Cmd(DMA1_Channel2 , ENABLE ) ;
+  DMA_ITConfig(DMA1_Channel2, DMA_IT_TC, ENABLE);*/
+  
+  RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+  TIM3->CCER   |= TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E;
+  TIM3->CCMR1  |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1PE | TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2PE;
+  TIM3->CCMR2  |= TIM_CCMR2_OC3M_2 | TIM_CCMR2_OC3PE | TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4PE;
+  TIM3->DIER   |= TIM_DIER_CC1DE | TIM_DIER_CC3DE;
+  TIM3->CR1    |= TIM_CR1_CEN | TIM_CR1_ARPE;
+  TIM3->PSC = 0;
+  TIM3->ARR = 89;
+  TIM3->CCR3 = 0;
+  DBGMCU->CR |= DBGMCU_CR_DBG_TIM3_STOP;
+  
+  RCC->AHBENR |= RCC_AHBENR_DMA1EN;
+  DMA1_Channel2->CPAR = (uint32_t) &TIM3->CCR3;
+  DMA1_Channel2->CMAR = (uint32_t) &led_ws2812[0];
+  DMA1_Channel2->CNDTR = ARRAY_LEN;
+  DMA1_Channel2->CCR = DMA_CCR2_MINC | DMA_CCR2_CIRC | DMA_CCR2_DIR | DMA_CCR2_EN | DMA_CCR2_MSIZE_0 | DMA_CCR2_PSIZE_0;
+  DMA_ITConfig(DMA1_Channel2, DMA_IT_TC, ENABLE);
+  //NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+  uint8_t cnt = 0;
+  for (uint16_t clr = DELAY_LEN; clr < ARRAY_LEN - 24 * 2; clr++)
+  {    
+    if (cnt < 7) 
+      cnt++;
+    else 
+      cnt = 0;
+    led_ws2812[clr] = led_pwm[85][cnt];
+  }  
+  
+  /*
+  NVIC_InitTypeDef NVIC_InitStructure;  
+  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel2_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);  */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

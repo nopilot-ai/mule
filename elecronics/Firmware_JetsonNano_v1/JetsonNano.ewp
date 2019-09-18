@@ -1886,6 +1886,9 @@
       <file>
         <name>$PROJ_DIR$\Sources\user\modbus.h</name>
       </file>
+      <file>
+        <name>$PROJ_DIR$\Sources\user\ws2812.h</name>
+      </file>
     </group>
     <file>
       <name>$PROJ_DIR$\Sources\main.c</name>
