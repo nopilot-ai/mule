@@ -136,41 +136,12 @@ void init_adc(void)
   
   RCC_ADCCLKConfig(RCC_CFGR_ADCPRE_DIV8);
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 | RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA, ENABLE); 
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA, ENABLE); 
   
   //GPIO_StructInit(&GPIO_InitStructure);
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
-  //freq to give array 250 hz
-  uint16_t PrescalerValue = (uint16_t) (SystemCoreClock / 2500) - 1;
-  TIM_TimeBaseStructure.TIM_Period = 9;
-  TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
-  TIM_GenerateEvent(TIM1, TIM_EGR_CC1G);  
-  //TIM1->DIER |= TIM_DIER_CC1IE;  
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; 
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;                
-  TIM_OCInitStructure.TIM_Pulse = 0x1; 
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;         
-  TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-  //TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
-  //TIM_ARRPreloadConfig(TIM1, ENABLE);
-  //TIM_CtrlPWMOutputs(TIM1, ENABLE);  
-
-  TIM_Cmd(TIM1, ENABLE);      
-  TIM_CtrlPWMOutputs(TIM1, ENABLE);  
-
-  /*TIM_ITConfig(TIM1, TIM_DIER_CC1IE, ENABLE); 
-  NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure); 
-  TIM_Cmd(TIM1, ENABLE);   */
     
 __IO uint16_t ADCConvertedValue;
   // DMA1 channel1 configuration ----------------------------------------------
@@ -199,41 +170,32 @@ __IO uint16_t ADCConvertedValue;
   NVIC_Init(&NVIC_InitStructure);  
   
   ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
-  ADC_InitStructure.ADC_ScanConvMode = DISABLE;
-  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
-  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+  ADC_InitStructure.ADC_ScanConvMode = ENABLE;
+  ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
+  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
   ADC_InitStructure.ADC_NbrOfChannel = 5;
   ADC_Init(ADC1, &ADC_InitStructure);
-  
- /* ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE); 
-  NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);  */
-  
-  
+    
   ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 2, ADC_SampleTime_239Cycles5);
   ADC_RegularChannelConfig(ADC1, ADC_Channel_2, 3, ADC_SampleTime_239Cycles5);
-  ADC_RegularChannelConfig(ADC1, ADC_Channel_3, 4, ADC_SampleTime_239Cycles5);
-  ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 5, ADC_SampleTime_239Cycles5);
-  /* Regular discontinuous mode channel number configuration */
-  ADC_DiscModeChannelCountConfig(ADC1, 1);
-  /* Enable regular discontinuous mode */
-  ADC_DiscModeCmd(ADC1, ENABLE);
+  ADC_RegularChannelConfig(ADC1, ADC_Channel_3, 4, ADC_SampleTime_71Cycles5);
+  ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 5, ADC_SampleTime_55Cycles5);
+  
   //ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);  
   ADC_DMACmd(ADC1 , ENABLE );   
-  ADC_ExternalTrigConvCmd(ADC1, ENABLE);
+ // ADC_ExternalTrigConvCmd(ADC1, ENABLE);
   
   ADC_Cmd(ADC1 , ENABLE );
-  /*
+  
   ADC_ResetCalibration(ADC1);
   while(ADC_GetResetCalibrationStatus(ADC1));
   ADC_StartCalibration(ADC1);
-  while(ADC_GetCalibrationStatus(ADC1));*/
+  while(ADC_GetCalibrationStatus(ADC1));
   
+  //start to 50 Hz
+  ADC_SoftwareStartConvCmd(ADC1, ENABLE);  
 }
 
 void init_ppm(void)

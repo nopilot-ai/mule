@@ -30,6 +30,9 @@ uint16_t adc_end[5];
 uint32_t adc_flag = 0;
 uint16_t adc_data[ADC_ARR_LENGT*2][ADC_CH_CNT];
 
+struct adc_math board_va;
+
+
 int main(void)
 {
   PWR->CR |= PWR_CR_PLS_0 | PWR_CR_PLS_1 | PWR_CR_PLS_2;
@@ -69,11 +72,15 @@ int main(void)
       TIM_SetCompare3(TIM4, mb.registers.one[mbREG_PPM_2]);
       TIM_SetCompare4(TIM4, mb.registers.one[mbREG_PPM_1]);
       
-      mb.registers.one[mbREG_adc_Vbat] = (uint16_t)adc_end[0] * (3300.0 / 4096.0) * 11;
-      mb.registers.one[mbREG_adc_Ibat] = (uint16_t)adc_end[1];
-      mb.registers.one[mbREG_adc_Vjet] = (uint16_t)adc_end[3] * (3300.0 / 4096.0) * 11;
-      mb.registers.one[mbREG_adc_Ijet] = (uint16_t)adc_end[2];
-      mb.registers.one[mbREG_adc_5V] = (uint16_t)adc_end[4] * (3300.0 / 4096.0) * 2;
+      mb.registers.one[mbREG_adc_Vbat] = (uint16_t)(board_va.V_bat * 1000);
+      mb.registers.one[mbREG_adc_Ibat] = (int16_t)(board_va.I_bat * 1000);
+      mb.registers.one[mbREG_adc_Vjet] = (uint16_t)(board_va.V_jet * 1000);
+      mb.registers.one[mbREG_adc_Ijet] = (int16_t)(board_va.I_jet * 1000);
+      mb.registers.one[mbREG_adc_5V] = (uint16_t)(board_va.V_5v * 1000);
+      mb.registers.one[mbREG_adc_Wh_bat] = (uint16_t)(board_va.Wh_bat);
+      mb.registers.one[mbREG_adc_Wh_jet] = (uint16_t)(board_va.Wh_jet);
+      mb.registers.one[mbREG_adc_W_bat] = (uint16_t)(board_va.W_bat*1000);
+      mb.registers.one[mbREG_adc_W_jet] = (uint16_t)(board_va.W_jet*1000);
     }   
     if (adc_flag & 2)
     {
@@ -90,7 +97,17 @@ int main(void)
           adc_middle[cnt_ch] += adc_data[cnt + part][cnt_ch];
         }
         adc_end[cnt_ch] = adc_middle[cnt_ch] / ADC_ARR_LENGT;
+        board_va.ch[cnt_ch] = adc_end[cnt_ch];
       }
+      board_va.V_bat = board_va.ch[0] * (3.3 / 4096.0) * 11;
+      board_va.I_bat = (board_va.ch[1] * (3.3 / 4096.0) - 1.65) / 0.066;
+      board_va.V_jet = board_va.ch[3] * (3.3 / 4096.0) * 11;
+      board_va.I_jet = (board_va.ch[2] * (3.3 / 4096.0) - 1.65) / 0.066;
+      board_va.V_5v = board_va.ch[4] * (3.3 / 4096.0) * 2;
+      board_va.W_bat = board_va.I_bat * board_va.V_bat;
+      board_va.W_jet = board_va.I_jet * board_va.V_bat;
+      board_va.Wh_bat += board_va.W_bat /60/60/ 50;
+      board_va.Wh_jet += board_va.W_jet /60/60/ 50;
     } 
   }
 }
