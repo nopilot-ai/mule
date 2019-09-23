@@ -59,11 +59,11 @@ class JoyXbox:
 			self.life = -1
 	
 	
-
+"""
 if __name__ == "__main__":
 	joy = JoyXbox()
 	print(joy.find())
 	joy.read()
-		#print(time.time())
+"""
 
 
