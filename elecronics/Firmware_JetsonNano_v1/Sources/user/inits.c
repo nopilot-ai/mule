@@ -10,19 +10,61 @@ GPIO_InitTypeDef GPIO_InitStructure;
 void init_gpio(void)
 {
   //GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC, ENABLE);
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
   GPIOC->BSRR |= GPIO_BSRR_BS13;    
     
-  //JET_PON
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+  
+  //JETSON_RESET 0 is ON
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_WriteBit(GPIOA, GPIO_Pin_6, 1);  
+  GPIO_WriteBit(GPIOB, GPIO_Pin_1, 0);
+  
+  //JETSON_PON
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_WriteBit(GPIOA, GPIO_Pin_6, 0);  
+  
+  //JETSON_USB_VOLTAGE_READ
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_15); 
+       
+  //ACCELERATION_PON
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_WriteBit(GPIOA, GPIO_Pin_5, 0);   
+  
+  //ALL_POWER_HOLD
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_WriteBit(GPIOC, GPIO_Pin_14, 1); 
+  
+  //PWR_BUTTON_READ
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_15); 
+  
+  mb.registers.one[mbREG_ALL_PON] = 1;
+  mb.registers.one[mbREG_JETSON_PON] = 1;
+  mb.registers.one[mbREG_JETSON_ON] = 1;
+  mb.registers.one[mbREG_PPM_PON] = 0;
+  mb.registers.one[mbREG_SRV_PON] = 0;
 }
 
 
@@ -201,6 +243,7 @@ __IO uint16_t ADCConvertedValue;
 
 void init_ppm(void)
 {
+  NVIC_InitTypeDef NVIC_InitStructure;  
   #define TIM_PPM TIM4
   GPIO_InitTypeDef GPIO_InitStructure;
   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
@@ -221,6 +264,7 @@ void init_ppm(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
   GPIO_Init(GPIOB, &GPIO_InitStructure);  
   GPIO_WriteBit(GPIOB, GPIO_Pin_5, !mb.registers.one[mbREG_PPM_PON]);
+  
   
   uint16_t PrescalerValue = (uint16_t) (SystemCoreClock / 100000) - 1;
   TIM_TimeBaseStructure.TIM_Period = 2000;    //(1/speed)/(1/timeout)*4
@@ -245,8 +289,15 @@ void init_ppm(void)
   TIM_OC1PreloadConfig(TIM_PPM, TIM_OCPreload_Enable);
 
   TIM_ARRPreloadConfig(TIM_PPM, ENABLE);
+  TIM_ITConfig(TIM_PPM, TIM_IT_Update, ENABLE);
   
   TIM_Cmd(TIM_PPM, ENABLE);
+  
+  NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);  
 }
 
 void init_ws2812(void)
@@ -319,7 +370,7 @@ void init_ws2812(void)
   DMA1_Channel2->CCR = DMA_CCR2_MINC | DMA_CCR2_CIRC | DMA_CCR2_DIR | DMA_CCR2_EN | DMA_CCR2_MSIZE_0 | DMA_CCR2_PSIZE_0;
   DMA_ITConfig(DMA1_Channel2, DMA_IT_TC, ENABLE);
   //NVIC_EnableIRQ(DMA1_Channel2_IRQn);
-  uint8_t cnt = 0;
+  /*
   for (uint16_t clr = DELAY_LEN; clr < ARRAY_LEN - 24 * 2; clr++)
   {    
     if (cnt < 7) 
@@ -327,17 +378,20 @@ void init_ws2812(void)
     else 
       cnt = 0;
     led_ws2812[clr] = led_pwm[85][cnt];
-  }  
-  
-  /*
-  NVIC_InitTypeDef NVIC_InitStructure;  
-  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);  */
+  }  */
+  led_wheel(0, 127, 0, 0);
+  led_wheel(1, 0, 127, 0);
+  led_wheel(2, 0, 0, 127);
+  led_wheel(3, 127, 0, 0);
+  led_wheel(4, 127, 127, 0);
+  led_wheel(5, 127, 0, 127);
+  led_wheel(6, 0, 127, 127);
+  led_wheel(7, 127, 0, 0);
+  led_wheel(8, 127, 0, 0);
+  led_wheel(9, 64, 64, 64);
+  led_wheel(10, 0, 0, 0);
+  led_wheel(11, 127, 127, 127);
 }
-
 
 
 

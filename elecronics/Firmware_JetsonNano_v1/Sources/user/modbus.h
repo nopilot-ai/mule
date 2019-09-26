@@ -108,8 +108,7 @@ struct modbus_struct{
   uint8_t u8lastRec;
   uint16_t *au16regs;
   uint16_t u16InCnt, u16OutCnt, u16errCnt;
-  uint16_t u16timeOut;
-  uint32_t u32time, u32timeOut;
+  uint16_t u16timeOut, u16time;
   uint8_t u8regsize;
   uint8_t flag;
   union twobyte registers;
