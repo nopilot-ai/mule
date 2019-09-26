@@ -1,14 +1,13 @@
 {
+  "freq": 10,
   "steering": {
-    "left":365,
-    "mid": 456,
-    "right": 600,
-    "freq": 10
+    "left":164,
+    "mid": 150,
+    "right": 80
   },
   "acceleration": {
-    "max": 100,
-    "mid": 0,
-    "min": -100,
-    "freq": 10
+    "max": 180,
+    "mid": 150,
+    "min": 120
   }
 }
