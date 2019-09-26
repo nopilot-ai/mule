@@ -24,7 +24,7 @@ class Jetsonmodbus:
 		
 		self.errors = 0
 		self.steering = 0;
-		self.accel = 0;
+		self.acceleration = 0;
 		self.mb = minimalmodbus.Instrument(Serial,1,minimalmodbus.MODE_RTU)
 		self.mb.serial.baudrate = 115200         # Baud
 		self.mb.serial.bytesize = 8
@@ -57,25 +57,30 @@ class Jetsonmodbus:
 		finally:
 		    	config_file.close()
 
-	def set_steering(self, data):
-		#print (self.steering)
-		if (data > 100):
-			data = 100
-		elif (data < -100):
-			data = -100
+	def set_control(self, steering, accel):
+		if (steering > 100):
+			steering = 100
+		elif (steering < -100):
+			steering = -100
+		if (accel > 100):
+			accel = 100
+		elif (accel < -100):
+			accel = -100
 		# (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-		self.steering = (data - (-100)) * (self.steering_r - self.steering_l) / (100 - (-100)) + self.steering_l
-		#print ("Steering:" + str(data) + " " + str(self.steering))
+		self.steering = (steering - (-100)) * (self.steering_r - self.steering_l) / (100 - (-100)) + self.steering_l		
+		self.acceleration = (accel - (-100)) * (self.accel_forward - self.accel_back) / (100 - (-100)) + self.accel_back
+		#print ("Steering:" + str(steering) + " " + str(self.steering))		
+		#print ("accel: " + str(accel) + " " + str(self.acceleration))
 
 	def set_acceleration(self, data):
-		print (self.accel)
+		print (self.acceleration)
 		if (data > 100):
 			data = 100
 		elif (data < -100):
 			data = -100
 		# (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-		self.accel = (data - (-100)) * (self.accel_forward - self.accel_back) / (100 - (-100)) + self.accel_back
-		print ("accel" + str(data) + " " + str(self.accel))
+		self.acceleration = (data - (-100)) * (self.accel_forward - self.accel_back) / (100 - (-100)) + self.accel_back
+		print ("accel" + str(data) + " " + str(self.acceleration))
 
 	def loop(self):
 		self.life = True
@@ -86,7 +91,7 @@ class Jetsonmodbus:
 			except:
 				self.errors = self.errors + 1
 			try:
-				self.mb.write_register(5, self.accel)				
+				self.mb.write_register(5, self.acceleration)				
 			except:
 				self.errors = self.errors + 1
 			#print(self.registers)

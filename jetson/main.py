@@ -18,8 +18,8 @@ thread_modbus = threading.Thread(target = jetboard.loop, name = "proc_jetboard")
 thread_joystick.start()
 thread_modbus.start()
 while joypad.life:
-	jetboard.set_steering(joypad.steering)
-	jetboard.set_acceleration(joypad.acceleration)
+	jetboard.set_control(joypad.steering, joypad.acceleration)
+	#jetboard.set_acceleration()
 	if joypad.btnLB:
 		print("Reconfig")
 		joypad.btnLB = 0
