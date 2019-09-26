@@ -1,4 +1,4 @@
-"D:\GitHub\mule\elecronics\Firmware_JetsonNano_v1\STM32F10x_StdPeriph_Driver\src\misc.c"
+"D:\GitHub\mule\elecronics\Firmware_JetsonNano_v1\Sources\user\board.c"
 -std=c99
 -ferror-limit=100
 -I
@@ -231,7 +231,7 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\CMSIS\Include
 -D__HAS_LOCATED_WITH_INIT__=1
 -D__IAR_COMPILERBASE__=593160
 -D__DATE__="Sep 26 2019"
--D__TIME__="02:46:08"
+-D__TIME__="03:11:18"
 -D__STDC__=1
 -D__STDC_VERSION__=199901L
 -D__STDC_HOSTED__=1

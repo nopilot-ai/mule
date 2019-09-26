@@ -25,6 +25,7 @@
 #include "stm32f10x_it.h"
 #include "modbus.h"
 #include "main.h"
+#include "mb_regs.h"
 
 uint16_t temp_cnt[400];
 void USART1_IRQHandler(void)
@@ -60,6 +61,27 @@ void TIM2_IRQHandler(void)
   mb.flag |= 1;  
   //led_toggle();
 }
+    
+void TIM4_IRQHandler(void)
+{
+  TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
+  timer50hz++;
+  if (toggle50hz) 
+    toggle50hz = 0;
+  else 
+    toggle50hz = 1;
+  
+  if ((timer50hz % 50) == 0) 
+  {
+    timer1hz++;
+    if (toggle50hz) 
+      toggle50hz = 0;
+    else 
+      toggle50hz = 1;
+    led_toggle();
+    mb.registers.one[mbREG_work_tim_s]++;
+  }
+}
 
 void DMA1_Channel4_IRQHandler(void)
 {
@@ -92,14 +114,14 @@ void DMA1_Channel1_IRQHandler(void)
     adc_flag &=~ 1;
     adc_flag |= 2;
     DMA_ClearFlag(DMA1_IT_TC1);  
-    led_toggle();
+    //led_toggle();
   }
   if (DMA_GetITStatus(DMA1_IT_HT1) == SET)
   {
     adc_flag |= 1;
     adc_flag |= 2;
     DMA_ClearFlag(DMA1_IT_HT1);  
-    led_toggle();
+    //led_toggle();
   }
 }
 

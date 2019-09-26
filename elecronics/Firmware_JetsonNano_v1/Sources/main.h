@@ -2,16 +2,16 @@
 #define ADC_CH_CNT 5
 #define ADC_ARR_LENGT 199
 
-#define DELAY_LEN 48
-#define LED_COUNT 12
-#define ARRAY_LEN DELAY_LEN + LED_COUNT*24
 
 extern uint32_t adc_flag;
 extern uint16_t adc_data[ADC_ARR_LENGT*2][ADC_CH_CNT];
 void led_toggle(void);
 void init_ws2812(void);
 
-extern uint16_t led_ws2812[ARRAY_LEN];
+extern uint32_t toggle50hz;
+extern uint32_t timer50hz;
+extern uint32_t toggle1hz;
+extern uint32_t timer1hz;
 
 struct adc_math
 {

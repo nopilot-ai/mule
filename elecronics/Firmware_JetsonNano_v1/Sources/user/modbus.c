@@ -30,6 +30,8 @@ void mb_sendTxBuffer(void)
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
   DMA_SetCurrDataCounter(DMA1_Channel4, mb.u16OutCnt);
   DMA_Cmd(DMA1_Channel4, ENABLE);
+  mb.u16timeOut = mb.u16time;
+  mb.u16time = 0;
   /*
   DMA1_Channel4->CCR &=~ DMA_CCR_EN;      //выключение дћј
   DMA1_Channel4->CNDTR = mb.u16OutCnt;    //—колько байт надо отправить?
