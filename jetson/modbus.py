@@ -36,6 +36,10 @@ class Jetsonmodbus:
 		self.registers = list(repeat(0, 29))
 		try:
 			self.mb.write_register(4, 1, 0)
+			
+		except:
+			print("HZ")		
+		try:
 			self.mb.write_register(3, 1, 0)
 			
 		except:
@@ -72,25 +76,17 @@ class Jetsonmodbus:
 		#print ("Steering:" + str(steering) + " " + str(self.steering))		
 		#print ("accel: " + str(accel) + " " + str(self.acceleration))
 
-	def set_acceleration(self, data):
-		print (self.acceleration)
-		if (data > 100):
-			data = 100
-		elif (data < -100):
-			data = -100
-		# (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-		self.acceleration = (data - (-100)) * (self.accel_forward - self.accel_back) / (100 - (-100)) + self.accel_back
-		print ("accel" + str(data) + " " + str(self.acceleration))
-
 	def loop(self):
 		self.life = True
 		while self.life:
 			self.registers = self.mb.read_registers(0, 30)
 			try:
+				time.sleep(0.01)
 				self.mb.write_register(6, self.steering)				
 			except:
 				self.errors = self.errors + 1
 			try:
+				time.sleep(0.01)
 				self.mb.write_register(5, self.acceleration)				
 			except:
 				self.errors = self.errors + 1
@@ -99,6 +95,21 @@ class Jetsonmodbus:
 
 	def set_acceleration(self, gas):
 		self.accel = gas
+
+	def open_cap(self):
+		print("OpenCapFunc")
+		try:
+			time.sleep(0.01)
+			self.mb.write_register(7, 120)				
+		except:
+			self.errors = self.errors + 1
+		time.sleep(0.5)
+		try:
+			time.sleep(0.01)
+			self.mb.write_register(7, 150)				
+		except:
+			self.errors = self.errors + 1
+		
 
 """
 if __name__ == "__main__":

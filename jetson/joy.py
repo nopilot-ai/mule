@@ -20,15 +20,15 @@ class JoyXbox:
 		self.btnA = 0
 
 	def find(self):
-		try:
-			for x in range(0,10):
-				self.gamepad = InputDevice('/dev/input/event' + str(x))
-				if self.gamepad.name.find("Xbox") != -1:
-					return "/dev/input/event" + str(x)
-			gamepad = 0
-			return -1
-		except:
-			return -1
+		while True:
+			try:			
+				for x in range(0,10):
+					self.gamepad = InputDevice('/dev/input/event' + str(x))
+					if self.gamepad.name.find("Xbox") != -1:
+						return "/dev/input/event" + str(x)
+			except:
+				print("Wait joypad")
+				time.sleep(0.5)
 	
 	def get_update(self):
 		if self.update:
@@ -42,13 +42,16 @@ class JoyXbox:
 				if self.life < 1:
 					break
 				if event.type == ecodes.EV_KEY:
-					if event.code == 305:
-						self.life = 0
-						print("Stop joypad loop")
+					#if event.code == 305:
+					#	self.life = 0
+					#	print("Stop joypad loop")
 					
 					if event.code == 307:
 						if event.value == 0:
 							self.btnLB = 1
+					if event.code == 306:
+						if event.value == 0:
+							self.btnX = 1
 					print(time.time())
 					print(event.value)
 					print(event.code)
@@ -57,6 +60,10 @@ class JoyXbox:
 						self.steering = int(199/65536 * event.value - 99)
 						self.update = True
 						#print("X: ", int(self.steering))
+					#if (event.code == 1):
+					#	self.acceleration = int(199/65536 * event.value - 99)
+					#	self.update = True
+					#	#print("X: ", int(self.steering))
 					if (event.code == 2):
 						self.drag = -event.value
 						self.acceleration = int(100/1024 * (self.drag + self.gas))

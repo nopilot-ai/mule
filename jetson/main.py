@@ -24,6 +24,10 @@ while joypad.life:
 		print("Reconfig")
 		joypad.btnLB = 0
 		jetboard.reconfig()
+	if joypad.btnX:
+		print("openCap")
+		joypad.btnX = 0	
+		jetboard.open_cap()
 joypad.life = 0
 jetboard.life = 0
 print("end code")

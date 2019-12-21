@@ -1,9 +1,9 @@
 {
   "freq": 10,
   "steering": {
-    "left":164,
-    "mid": 150,
-    "right": 80
+    "left":65,
+    "mid": 120,
+    "right": 145
   },
   "acceleration": {
     "max": 180,
