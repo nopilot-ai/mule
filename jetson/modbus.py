@@ -34,9 +34,9 @@ class Jetsonmodbus:
 		self.mb.address = 1
 		self.mb.clear_buffers_before_each_transaction = True
 		self.registers = list(repeat(0, 29))
+		self.open_cap = 0;
 		try:
 			self.mb.write_register(4, 1, 0)
-			
 		except:
 			print("HZ")		
 		try:
@@ -62,6 +62,8 @@ class Jetsonmodbus:
 		    	config_file.close()
 
 	def set_control(self, steering, accel):
+#		if cap:
+#			self.open_cap = cap
 		if (steering > 100):
 			steering = 100
 		elif (steering < -100):
@@ -91,24 +93,25 @@ class Jetsonmodbus:
 			except:
 				self.errors = self.errors + 1
 			#print(self.registers)
+			if self.open_cap:
+				self.open_cap = 0
+				print("OpenCapFunc")
+				try:
+					time.sleep(0.01)
+					self.mb.write_register(7, 120)				
+				except:
+					self.errors = self.errors + 1
+				time.sleep(0.5)
+				try:
+					time.sleep(0.01)
+					self.mb.write_register(7, 150)				
+				except:
+					self.errors = self.errors + 1
+
 			time.sleep(1/self.freq)
 
 	def set_acceleration(self, gas):
 		self.accel = gas
-
-	def open_cap(self):
-		print("OpenCapFunc")
-		try:
-			time.sleep(0.01)
-			self.mb.write_register(7, 120)				
-		except:
-			self.errors = self.errors + 1
-		time.sleep(0.5)
-		try:
-			time.sleep(0.01)
-			self.mb.write_register(7, 150)				
-		except:
-			self.errors = self.errors + 1
 		
 
 """

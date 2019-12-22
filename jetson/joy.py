@@ -20,15 +20,14 @@ class JoyXbox:
 		self.btnA = 0
 
 	def find(self):
-		while True:
-			try:			
-				for x in range(0,10):
-					self.gamepad = InputDevice('/dev/input/event' + str(x))
-					if self.gamepad.name.find("Xbox") != -1:
-						return "/dev/input/event" + str(x)
-			except:
-				print("Wait joypad")
-				time.sleep(0.5)
+		try:
+			for x in range(0,10):
+				self.gamepad = InputDevice('/dev/input/event' + str(x))
+				if self.gamepad.name.find("Xbox") != -1:
+					print("/dev/input/event" + str(x))
+					return False
+		except:
+			return True
 	
 	def get_update(self):
 		if self.update:
@@ -76,7 +75,8 @@ class JoyXbox:
 						#print("RT: ", self.acceleration)
 		except:
 			print("joypad disconnect")
-			self.life = -1
+			self.find()
+			#self.life = -1
 	
 	
 """
